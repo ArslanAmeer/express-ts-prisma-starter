@@ -18,8 +18,10 @@ Package manager is **pnpm** (version pinned in `package.json` / `.tool-versions`
 
 Copy `.env.template` to `.env` before running.
 
+`pnpm install` prints `Ignored build scripts: @scarf/scarf, esbuild`. That is expected — pnpm blocks install scripts by default, `pnpm-workspace.yaml` allows only Prisma's (needed for migrations), and pnpm 10.33 has no setting that hides the notice. Don't try to silence it.
+
 Database (PostgreSQL 18 via `docker-compose.yml`, Prisma 7):
-- `pnpm db:up` / `pnpm db:down` — start/stop Postgres. First start creates two databases: `app` (dev) and `app_test` (tests)
+- `pnpm db:up` / `pnpm db:down` — start/stop Postgres. First start creates two databases: `app` (dev) and `app_test` (tests). `db:up` runs `scripts/db-up.mjs`, which checks Docker and starts Docker Desktop (macOS/Windows) when it isn't running
 - `pnpm db:migrate --name <change>` — after editing a model, creates and applies a migration; commit the new `prisma/migrations/*` folder
 - `pnpm db:deploy` — apply existing migrations only (CI, tests, production)
 - `pnpm db:seed`, `pnpm db:reset`, `pnpm db:studio` (browser GUI for the data)
@@ -27,6 +29,12 @@ Database (PostgreSQL 18 via `docker-compose.yml`, Prisma 7):
 - **Tests need Postgres running.** `vitest.global-setup.ts` runs `prisma migrate deploy` against `app_test` (override with `TEST_DATABASE_URL`). Router tests hit the real database; service tests mock the repository
 
 CI (`.github/workflows/ci.yml`) runs Biome, build, and tests (with a Postgres service container), then builds and pushes a Docker image to GHCR.
+
+## Commits and branches
+
+Commit messages **always** start with a gitmoji and a capitalised label: `✨ Add:` (new feature or file), `♻️ Update:` (change existing behaviour, refactor, rename), `🛠️ Fix:` (bug fix), `🔥 Remove:` (delete code or dependencies), `⬆️ Upgrade:` (dependency bumps, releases), `🧪 Test:` (tests only). Example: `✨ Add: posts endpoint`.
+
+`main` is protected: no direct pushes, even for the owner. Work on a branch, open a PR, let CI pass, then squash merge. Details in `docs/coding-standards.md`.
 
 ## Architecture
 
