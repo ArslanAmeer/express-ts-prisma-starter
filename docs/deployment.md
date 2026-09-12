@@ -59,16 +59,32 @@ All variables are validated at startup. See [Architecture → Configuration](arc
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes to `master` and on pull requests:
+`.github/workflows/ci.yml` runs on pushes to `main` and on pull requests:
 
 | Job | What it checks |
 | --- | --- |
 | Code Quality | `biome ci .` with the Biome version pinned in the lockfile |
 | Build | `pnpm build` (Prisma client generation, type-check, bundle) |
 | Test | `pnpm test` against a PostgreSQL 18 service container (`app_test`) |
-| Docker | Builds the image. On pushes (not pull requests) it also pushes it to GitHub Container Registry, tagged with the commit SHA and `latest` on `master` |
+| Docker Build and Push | **Optional, skipped by default.** Builds the image and, on pushes to `main`, publishes it to GitHub Container Registry tagged with the commit SHA and `latest` |
 
 The shared `.github/actions/setup-pnpm` action installs the Node and pnpm versions from `.tool-versions` and restores the pnpm cache. Third-party actions are pinned to commit SHAs, and Renovate keeps them updated.
+
+### Publishing an image is opt-in
+
+The Docker job only runs when the repository variable `ENABLE_DOCKER_PUBLISH` is set to `true` (Settings → Secrets and variables → Actions → Variables). Turn it on when something pulls the image from a registry — a server running `docker run`, Kubernetes, or another machine.
+
+Leave it off when your platform builds from the repository itself. **Coolify, Railway, Render and Fly.io** clone the repo and build the `Dockerfile` on their side, so publishing to GHCR would just duplicate that work.
+
+### Deploying from a git push
+
+With a platform that redeploys whenever `main` changes:
+
+1. Set the environment variables from [Environment variables](#environment-variables) in the platform's dashboard, `DATABASE_URL` first.
+2. Run migrations before the new version serves traffic. If the platform has a pre-deploy or release command, put `pnpm db:deploy` there; otherwise run it yourself against the production database before promoting the release.
+3. Point the platform's health check at `/health-check`.
+
+The app listens on `PORT` (default `8080`) and logs JSON to stdout, which these platforms collect automatically.
 
 ## Upgrading Node.js
 
