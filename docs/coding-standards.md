@@ -17,6 +17,39 @@ pnpm build   # type-check + bundle
 
 These are the same checks CI runs. See [Deployment → CI](deployment.md#ci).
 
+## Commits and branches
+
+Every commit message starts with a gitmoji followed by a capitalised label and a short, imperative summary:
+
+| Prefix | Use it for |
+| --- | --- |
+| `✨ Add:` | A new feature, file or capability |
+| `♻️ Update:` | Changing existing behaviour, refactoring, renaming |
+| `🛠️ Fix:` | Fixing a bug |
+| `🔥 Remove:` | Deleting code, files or dependencies |
+| `⬆️ Upgrade:` | Dependency bumps and releases |
+| `🧪 Test:` | Changes that are only tests |
+
+```text
+✨ Add: posts endpoint
+🛠️ Fix: reject decimal ids before they reach the database
+⬆️ Upgrade: Prisma to 7.11.0
+```
+
+Keep the summary under ~72 characters and put the reasoning in the commit body. One logical change per commit: tooling, database, application code and docs belong in separate commits.
+
+`main` is protected — nobody, including the owner, pushes to it directly. The workflow is:
+
+```bash
+git checkout -b <short-branch-name>
+# ...changes, then pnpm check && pnpm test && pnpm build
+git push -u origin <short-branch-name>
+gh pr create --fill
+gh pr merge --squash      # once Code Quality, Build and Test pass
+```
+
+Merges are **squash only** (merge commits are disabled, and protection requires linear history), so each PR lands as one commit on `main` — give it a gitmoji message too. Merged branches are deleted automatically.
+
 ## Naming
 
 | Thing | Convention | Example |
