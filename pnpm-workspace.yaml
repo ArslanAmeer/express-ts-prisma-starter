@@ -1,0 +1,12 @@
+# Which dependencies may run install scripts. pnpm blocks them all by default.
+#
+# pnpm still prints "Ignored build scripts: @scarf/scarf, esbuild" on every install.
+# That notice is expected and harmless — pnpm 10.33 offers no setting to hide it:
+#   - esbuild ships its binary as a platform package (@esbuild/<platform>), so its script is redundant
+#   - @scarf/scarf (pulled in by swagger-ui-dist) is analytics/telemetry we don't want to run
+allowBuilds:
+  # Prisma needs its scripts: they install the schema engine used by migrations.
+  "@prisma/engines": true
+  prisma: true
+  esbuild: false
+  "@scarf/scarf": false
