@@ -1,4 +1,4 @@
-# Express + TypeScript + Prisma + PostgreSQL Boilerplate
+# Express + TypeScript + Prisma + PostgreSQL Starter
 
 A production-ready starting point for REST APIs built with **Express 5**, **TypeScript**, **PostgreSQL** and **Prisma**. It gives you a feature-based folder structure, validated config, typed database access, request validation with generated Swagger docs, and a test suite that runs against a real database.
 
@@ -30,7 +30,7 @@ Prisma stays on the 7.x stable line on purpose: npm's `latest` tag currently poi
 ## Quick start
 
 ```bash
-git clone <your-repo-url> my-api && cd my-api
+git clone https://github.com/ArslanAmeer/express-ts-prisma-starter.git my-api && cd my-api
 pnpm install                 # also generates the Prisma client
 cp .env.template .env        # local settings; the defaults work with Docker Compose
 pnpm db:up                   # start PostgreSQL 18 in Docker

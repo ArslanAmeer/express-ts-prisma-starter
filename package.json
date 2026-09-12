@@ -1,9 +1,13 @@
 {
-	"name": "express-typescript-prisma-boilerplate",
+	"name": "express-ts-prisma-starter",
 	"version": "1.0.0",
-	"description": "REST API boilerplate: Express 5, TypeScript, Prisma and PostgreSQL",
+	"description": "REST API starter: Express 5, TypeScript, Prisma and PostgreSQL",
 	"author": "Arslan Ameer",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ArslanAmeer/express-ts-prisma-starter.git"
+	},
 	"private": true,
 	"type": "module",
 	"scripts": {
