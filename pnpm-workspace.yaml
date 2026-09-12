@@ -10,3 +10,16 @@ allowBuilds:
   prisma: true
   esbuild: false
   "@scarf/scarf": false
+
+# Security patches for transitive dependencies whose parent packages have not released
+# a fixed version yet. Re-check these on every dependency bump and delete the entries
+# that are no longer needed: `pnpm audit` should stay clean without them.
+#   qs, body-parser, path-to-regexp  -> pulled in by express 5.2.1 (already the latest release)
+#   mysql2, deepmerge-ts             -> pulled in by the prisma CLI, which the app never calls at runtime
+overrides:
+  qs: ">=6.16.0"
+  body-parser: ">=2.3.0"
+  path-to-regexp: ">=8.4.2"
+  mysql2: ">=3.24.4"
+  deepmerge-ts: ">=8.0.2"
+  esbuild: ">=0.28.1"
