@@ -1,0 +1,13 @@
+// Prisma schema entry point: client generator + database connection only.
+// Models live in prisma/schema/<model>.prisma (one file per model); Prisma merges every .prisma file under prisma/.
+// After editing a model, run `pnpm db:migrate --name <change>` to create and apply a migration.
+// Docs: https://www.prisma.io/docs/orm/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
