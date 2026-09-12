@@ -1,7 +1,10 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config();
+// quiet: dotenv otherwise prints a banner that breaks JSON log parsing in production
+dotenv.config({ quiet: true });
+
+export const DEFAULT_CORS_ORIGIN = "http://localhost:8080";
 
 const envSchema = z.object({
 	NODE_ENV: z.enum(["development", "production", "test"]).default("production"),
@@ -10,7 +13,7 @@ const envSchema = z.object({
 
 	PORT: z.coerce.number().int().positive().default(8080),
 
-	CORS_ORIGIN: z.url().default("http://localhost:8080"),
+	CORS_ORIGIN: z.url().default(DEFAULT_CORS_ORIGIN),
 
 	COMMON_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(1000),
 

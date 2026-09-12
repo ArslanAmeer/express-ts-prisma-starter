@@ -23,6 +23,10 @@ RUN pnpm run build
 # Final stage - combine production dependencies and build output
 FROM node:24.21.0-alpine AS runner
 WORKDIR /app
+# Express reads NODE_ENV directly: without it, it runs in development mode and returns
+# stack traces in error responses. Set here (not in a shared stage) so the build stage
+# still installs devDependencies.
+ENV NODE_ENV=production
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
 # package.json's "type": "module" tells Node that dist/*.js is ESM
@@ -33,6 +37,10 @@ USER node
 
 # Expose port 8080
 EXPOSE 8080
+
+# Reports unhealthy when the app or its database stops answering
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -q --spider "http://127.0.0.1:${PORT:-8080}/health-check" || exit 1
 
 # Start the server
 CMD ["node", "dist/index.js"]
