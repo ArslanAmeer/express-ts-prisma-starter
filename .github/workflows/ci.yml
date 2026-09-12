@@ -59,6 +59,11 @@ jobs:
   docker:
     name: Docker Build and Push
     needs: [build, test]
+    # Optional. Publishing an image to GHCR is off by default: set the repository variable
+    # ENABLE_DOCKER_PUBLISH to 'true' (Settings -> Secrets and variables -> Actions) to turn it on.
+    # Platforms that build from the repository themselves (Coolify, Railway, Render, Fly.io)
+    # use the Dockerfile directly and don't need this job.
+    if: vars.ENABLE_DOCKER_PUBLISH == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,15 +82,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      # Registry references must be lowercase, but GitHub owner names may contain capitals
+      - name: Compute image name
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
       # Generate Docker metadata (tags, labels)
       - name: Docker metadata
         id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ steps.image.outputs.name }}
           tags: |
             type=raw,value=${{ github.sha }}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=semver,pattern={{version}},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ startsWith(github.ref, 'refs/tags/v') }}
             type=ref,event=branch
@@ -101,10 +110,10 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: |
             type=gha,scope=${{ github.ref_name }}-${{ github.job }}
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache
+            type=registry,ref=${{ steps.image.outputs.name }}:buildcache
           cache-to: |
             type=gha,mode=max,scope=${{ github.ref_name }}-${{ github.job }}
-            type=registry,ref=ghcr.io/${{ github.repository }}:buildcache,mode=max
+            type=registry,ref=${{ steps.image.outputs.name }}:buildcache,mode=max
 
   summary:
     name: Workflow Summary
