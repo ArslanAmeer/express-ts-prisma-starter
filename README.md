@@ -22,6 +22,19 @@ A production-ready starting point for REST APIs built with **Express 5**, **Type
 
 Prisma stays on the 7.x stable line on purpose: npm's `latest` tag currently points at an 8.0 release candidate.
 
+## Make it yours
+
+These are the tools I reach for: current, fast and actively maintained — pnpm over npm, Biome over ESLint plus Prettier, Vitest over Jest, tsdown over tsup, Prisma for typed database access without hand-written SQL. That's what fits the way I build, not a prescription.
+
+Treat this as a starting point, not a rulebook. Swap the ORM, replace Biome, drop the Docker setup, rename folders, delete the sample `users` module — whatever suits your project. The only convention worth keeping is the layering (**router → controller → service → repository**, with Zod validating the edges), because the guides in [`docs/`](#documentation) describe it; change that and the docs are yours to update too.
+
+Starting a project from here? A few things still carry my details:
+
+1. **`package.json`** — `name`, `description`, `author`, `repository`
+2. **`LICENSE`** — the copyright line
+3. **This README** — the clone URL above, and this section
+4. **`prisma/seed.ts` and `src/api/user/`** — sample data and a sample feature. Keep them as a working reference while you build, then delete them
+
 ## Prerequisites
 
 - **Node.js 24.21.0** and **pnpm 10.33.0**. Both are pinned in [`.tool-versions`](.tool-versions), so a version manager like [mise](https://mise.jdx.dev/) or [asdf](https://asdf-vm.com/) picks them up automatically
@@ -30,7 +43,7 @@ Prisma stays on the 7.x stable line on purpose: npm's `latest` tag currently poi
 ## Quick start
 
 ```bash
-git clone https://github.com/ArslanAmeer/express-ts-prisma-starter.git my-api && cd my-api
+git clone https://github.com/ArslanAmeer/express-ts-prisma-starter.git my-api && cd my-api  # or your own repo, if you used "Use this template"
 pnpm install                 # also generates the Prisma client
 cp .env.template .env        # local settings; the defaults work with Docker Compose
 pnpm db:up                   # start PostgreSQL 18 in Docker
