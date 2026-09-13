@@ -1,9 +1,10 @@
+import type { IncomingMessage, ServerResponse } from "node:http";
 import express from "express";
 import { StatusCodes } from "http-status-codes";
 import request from "supertest";
 
 import errorHandler from "@/common/middleware/errorHandler";
-import requestLogger from "@/common/middleware/requestLogger";
+import requestLogger, { getLogLevel } from "@/common/middleware/requestLogger";
 
 describe("Request Logger Middleware", () => {
 	const app = express();
@@ -49,6 +50,28 @@ describe("Request Logger Middleware", () => {
 		it("logs 404 for unknown routes", async () => {
 			const response = await request(app).get("/unknown");
 			expect(response.status).toBe(StatusCodes.NOT_FOUND);
+		});
+	});
+
+	describe("Log levels", () => {
+		const level = (url: string, statusCode: number, err?: Error) =>
+			getLogLevel({ url } as IncomingMessage, { statusCode } as ServerResponse, err);
+
+		it("logs normal traffic at info, client errors at warn and server errors at error", () => {
+			expect(level("/users", StatusCodes.OK)).toBe("info");
+			expect(level("/users/abc", StatusCodes.BAD_REQUEST)).toBe("warn");
+			expect(level("/users", StatusCodes.INTERNAL_SERVER_ERROR)).toBe("error");
+			expect(level("/users", StatusCodes.OK, new Error("boom"))).toBe("error");
+		});
+
+		it("skips successful health checks and Swagger UI requests", () => {
+			expect(level("/health-check", StatusCodes.OK)).toBe("silent");
+			expect(level("/docs/swagger-ui.css", StatusCodes.OK)).toBe("silent");
+		});
+
+		it("still logs failing health checks and routes that only share a prefix", () => {
+			expect(level("/health-check", StatusCodes.SERVICE_UNAVAILABLE)).toBe("error");
+			expect(level("/documents", StatusCodes.OK)).toBe("info");
 		});
 	});
 });

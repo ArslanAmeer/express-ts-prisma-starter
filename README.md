@@ -52,7 +52,7 @@ pnpm db:seed                 # add starter data
 pnpm start:dev               # http://localhost:8080
 ```
 
-Open **http://localhost:8080** for Swagger UI. Try `GET /health-check` and `GET /users`.
+Open **http://localhost:8080/docs** for Swagger UI (the root redirects there). Try `GET /health-check` and `GET /users`.
 
 ## Scripts
 

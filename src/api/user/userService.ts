@@ -3,7 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import type { User } from "@/api/user/userModel";
 import { UserRepository } from "@/api/user/userRepository";
 import { ServiceResponse } from "@/common/models/serviceResponse";
-import { logger } from "@/server";
+import { logger } from "@/common/utils/logger";
 
 export class UserService {
 	private userRepository: UserRepository;

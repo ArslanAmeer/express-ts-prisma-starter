@@ -11,4 +11,9 @@ openAPIRouter.get("/swagger.json", (_req: Request, res: Response) => {
 	res.send(openAPIDocument);
 });
 
-openAPIRouter.use("/", swaggerUi.serve, swaggerUi.setup(openAPIDocument));
+// Swagger UI lives under /docs. Mounting it at "/" made it answer every unknown GET with
+// the UI page and a 200, so the 404 handler never ran.
+openAPIRouter.use("/docs", swaggerUi.serve, swaggerUi.setup(openAPIDocument));
+
+// Only the exact root redirects, anything else unmatched falls through to the 404 handler
+openAPIRouter.get("/", (_req: Request, res: Response) => res.redirect("/docs"));

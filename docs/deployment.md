@@ -7,7 +7,7 @@ pnpm build        # prisma generate → type-check → bundle to dist/index.js
 pnpm start:prod   # node dist/index.js
 ```
 
-`NODE_ENV` defaults to `production` when unset. That gives info-level JSON logs and no response-body capture.
+`NODE_ENV` defaults to `production` when unset. That gives info-level JSON logs, one line per request.
 
 ## Docker image
 
