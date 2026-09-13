@@ -35,6 +35,13 @@ Starting a project from here? A few things still carry my details:
 3. **This README** — the clone URL above, and this section
 4. **`prisma/seed.ts` and `src/api/user/`** — sample data and a sample feature. Keep them as a working reference while you build, then delete them
 
+## Not included, on purpose
+
+- **Authentication and authorization.** Every project handles identity differently — sessions, JWT, OAuth, passkeys, or a hosted provider such as Better Auth, Auth0, Clerk or Supabase — so the starter ships none rather than one you would have to unpick, and no half-finished example that could reach production. It slots in as middleware in front of the feature routers in [`src/server.ts`](src/server.ts), with the user model in `prisma/schema/`; keep password hashes and other secrets out of responses using Prisma's `omit` in the repository ([details](docs/database.md#keep-sensitive-fields-out-of-responses)).
+- **An admin UI.** `pnpm db:studio` gives you a local browser over your data during development. Anything user-facing — Directus, Forest Admin, react-admin — is a separate choice, and those tools bring their own users and permissions.
+
+Everything else the API needs day to day is here: validated config, database access and migrations, request validation, generated API docs, logging, rate limiting, tests, CI and a production container.
+
 ## Prerequisites
 
 - **Node.js 24.21.0** and **pnpm 10.33.0**. Both are pinned in [`.tool-versions`](.tool-versions), so a version manager like [mise](https://mise.jdx.dev/) or [asdf](https://asdf-vm.com/) picks them up automatically
