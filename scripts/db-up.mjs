@@ -4,8 +4,11 @@
 // on macOS/Windows when it isn't. Run it with `pnpm db:up`.
 import { spawnSync } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
+import "dotenv/config";
 
 const DAEMON_WAIT_SECONDS = 120;
+// Matches the port docker-compose.yml publishes, so the message reports the real one
+const POSTGRES_PORT = process.env.POSTGRES_PORT ?? "5432";
 
 const run = (command, args, options = {}) => spawnSync(command, args, { encoding: "utf8", ...options });
 const quiet = { stdio: "ignore" };
@@ -84,5 +87,5 @@ if (result.status !== 0) {
 	fail("Could not start PostgreSQL. See the Docker output above.");
 }
 
-console.log("\nPostgreSQL is ready on localhost:5432 (databases: app, app_test).");
+console.log(`\nPostgreSQL is ready on localhost:${POSTGRES_PORT} (databases: app, app_test).`);
 console.log("Next: pnpm db:migrate && pnpm db:seed, then pnpm start:dev");

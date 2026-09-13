@@ -7,7 +7,9 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: app
     ports:
-      - "5432:5432"
+      # Host port comes from POSTGRES_PORT in .env (default 5432). Change it when something
+      # else already listens on 5432, and keep the port inside DATABASE_URL the same.
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       # Postgres 18+ images keep their data under /var/lib/postgresql/<major>/docker
       - postgres-data:/var/lib/postgresql

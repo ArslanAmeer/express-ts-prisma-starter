@@ -8,6 +8,7 @@ PostgreSQL 18 runs locally in Docker Compose. The app talks to it through **Pris
 | --- | --- |
 | Start / stop | `pnpm db:up` / `pnpm db:down` (your data is kept in a Docker volume) |
 | Connection | `postgresql://postgres:postgres@localhost:5432/app` (from `.env`) |
+| Port | `POSTGRES_PORT` in `.env` (default `5432`). Change it if that port is taken, and keep the port inside `DATABASE_URL` the same; tests follow `POSTGRES_PORT` automatically |
 | Databases | `app` for development, `app_test` for the test suite |
 | Browse data | `pnpm db:studio` |
 
@@ -161,6 +162,7 @@ The test suite never touches your development data:
 | --- | --- |
 | `Invalid environment variables ... DATABASE_URL` | Copy `.env.template` to `.env` |
 | `Can't reach database server at localhost:5432` | Start Docker Desktop, then `pnpm db:up` |
+| `pnpm db:up` fails with `Bind for 0.0.0.0:5432 failed: port is already allocated` | Another PostgreSQL already owns that port — a Homebrew install, Postgres.app, or another project's containers. Either stop it (`brew services stop postgresql@18`, quit Postgres.app, or `docker compose down` in the other project), or set `POSTGRES_PORT=5433` in `.env` and change the port inside `DATABASE_URL` to match |
 | Tests fail with `database "app_test" does not exist` | The volume was created before the init script existed. Run `docker compose down -v && pnpm db:up`. **This deletes all local data.** Then re-run `pnpm db:migrate` and `pnpm db:seed` |
 | TypeScript can't find `@/generated/prisma/client`, or the types are outdated | `pnpm exec prisma generate` |
 | `pnpm db:migrate` reports drift and wants to reset | Someone changed the database outside of migrations. Locally it's safe to accept. Never do this against shared databases |
