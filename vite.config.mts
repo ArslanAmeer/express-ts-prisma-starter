@@ -1,8 +1,12 @@
 import { fileURLToPath } from "node:url";
+import "dotenv/config";
 import { configDefaults, defineConfig } from "vitest/config";
 
-// Tests use their own database (created by docker-compose) so they never touch development data
-const testDatabaseUrl = process.env.TEST_DATABASE_URL ?? "postgresql://postgres:postgres@localhost:5432/app_test";
+// Tests use their own database (created by docker-compose) so they never touch development data.
+// The port follows POSTGRES_PORT from .env, so changing the port there is enough.
+const postgresPort = process.env.POSTGRES_PORT ?? "5432";
+const testDatabaseUrl =
+	process.env.TEST_DATABASE_URL ?? `postgresql://postgres:postgres@localhost:${postgresPort}/app_test`;
 
 export default defineConfig({
 	resolve: {
