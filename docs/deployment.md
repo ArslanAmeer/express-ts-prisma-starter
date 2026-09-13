@@ -15,7 +15,9 @@ The `Dockerfile` is a multi-stage build:
 
 1. **prod-deps** installs only production dependencies.
 2. **build** installs everything, generates the Prisma client and runs `pnpm run build`.
-3. **runner** (`node:24-alpine`) copies in `node_modules`, `dist/` and `package.json`, and runs `node dist/index.js` as the unprivileged `node` user on port `8080`.
+3. **runner** (`node:24-alpine`) copies in `node_modules`, `dist/` and `package.json`, sets `NODE_ENV=production`, and runs `node dist/index.js` as the unprivileged `node` user on port `8080`.
+
+`NODE_ENV=production` is set in the image on purpose: Express reads that variable directly, and without it Express runs in development mode and returns **stack traces in error responses**. The image also declares a `HEALTHCHECK` against `/health-check`, so `docker ps` and Compose mark the container unhealthy when the app or its database stops answering.
 
 `.dockerignore` keeps `.env`, `node_modules`, `dist` and generated files out of the build context, so your local secrets never end up in an image.
 
@@ -53,7 +55,8 @@ All variables are validated at startup. See [Architecture → Configuration](arc
 
 ## Before going live
 
-- **Trust proxy:** `src/server.ts` sets `app.set("trust proxy", true)`, which trusts every `X-Forwarded-For` header. Anyone can then fake their IP and get around the rate limiter, and express-rate-limit logs an `ERR_ERL_PERMISSIVE_TRUST_PROXY` warning at startup. Set it to the number of proxies in front of the app (usually `1`) for your hosting setup.
+- **Trust proxy:** `src/server.ts` sets `app.set("trust proxy", 1)`, which trusts exactly one reverse proxy — the usual setup behind Coolify, Traefik, nginx or a single load balancer. Raise it if you add another layer, such as a CDN in front of a load balancer. Setting it to `true` trusts any `X-Forwarded-For` header, which lets clients spoof their IP straight past the rate limiter.
+- **CORS:** the app logs a warning at startup if `CORS_ORIGIN` is still the localhost default while `NODE_ENV=production`, because browser requests from your real frontend would be blocked.
 - Point load balancer or container health checks at `GET /health-check`. It returns `503` when the database is unreachable.
 - The app handles `SIGTERM`/`SIGINT`: it stops accepting connections, closes the database pool and exits, or force-exits after 10 seconds.
 

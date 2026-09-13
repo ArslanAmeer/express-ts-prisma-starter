@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
 import type { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
 import pino from "pino";
@@ -6,9 +7,21 @@ import pinoHttp from "pino-http";
 
 import { env } from "@/common/utils/envConfig";
 
+// pino-pretty is a devDependency, so it is absent from the production image. Resolve it
+// before use: setting NODE_ENV=development in a container would otherwise crash on startup.
+const prettyTransport = () => {
+	if (env.isProduction) return undefined;
+	try {
+		createRequire(import.meta.url).resolve("pino-pretty");
+		return { target: "pino-pretty" };
+	} catch {
+		return undefined;
+	}
+};
+
 const logger = pino({
 	level: env.isProduction ? "info" : "debug",
-	transport: env.isProduction ? undefined : { target: "pino-pretty" },
+	transport: prettyTransport(),
 });
 
 const getLogLevel = (status: number) => {
