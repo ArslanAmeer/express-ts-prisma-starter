@@ -20,13 +20,30 @@ describe("OpenAPI Router", () => {
 			expect(response.body).toEqual(expectedResponse);
 		});
 
-		it("should serve the Swagger UI", async () => {
+		it("should serve the Swagger UI at /docs", async () => {
 			// Act
-			const response = await request(app).get("/");
+			const response = await request(app).get("/docs/");
 
 			// Assert
 			expect(response.status).toBe(StatusCodes.OK);
 			expect(response.text).toContain("swagger-ui");
+		});
+
+		it("should redirect the root to /docs", async () => {
+			// Act
+			const response = await request(app).get("/");
+
+			// Assert
+			expect(response.status).toBe(StatusCodes.MOVED_TEMPORARILY);
+			expect(response.headers.location).toBe("/docs");
+		});
+
+		it("should not swallow unknown routes", async () => {
+			// Act
+			const response = await request(app).get("/this-route-does-not-exist");
+
+			// Assert
+			expect(response.status).toBe(StatusCodes.NOT_FOUND);
 		});
 	});
 });

@@ -1,32 +1,22 @@
 import { randomUUID } from "node:crypto";
-import { createRequire } from "node:module";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import type { NextFunction, Request, Response } from "express";
 import { StatusCodes } from "http-status-codes";
-import pino from "pino";
 import pinoHttp from "pino-http";
 
-import { env } from "@/common/utils/envConfig";
+import { logger } from "@/common/utils/logger";
 
-// pino-pretty is a devDependency, so it is absent from the production image. Resolve it
-// before use: setting NODE_ENV=development in a container would otherwise crash on startup.
-const prettyTransport = () => {
-	if (env.isProduction) return undefined;
-	try {
-		createRequire(import.meta.url).resolve("pino-pretty");
-		return { target: "pino-pretty" };
-	} catch {
-		return undefined;
-	}
-};
+// Requests that would drown out real traffic: the Docker HEALTHCHECK polls every 30s,
+// and opening Swagger UI at /docs pulls several static assets. They are still logged when they fail.
+const isNoise = (url: string) => /^\/(health-check|docs|favicon)(\/|\?|\.|$)/.test(url);
 
-const logger = pino({
-	level: env.isProduction ? "info" : "debug",
-	transport: prettyTransport(),
-});
+// Express rewrites req.url inside mounted routers, so use the original URL for logs
+const urlOf = (req: IncomingMessage) => (req as Request).originalUrl ?? req.url;
 
-const getLogLevel = (status: number) => {
-	if (status >= StatusCodes.INTERNAL_SERVER_ERROR) return "error";
-	if (status >= StatusCodes.BAD_REQUEST) return "warn";
+export const getLogLevel = (req: IncomingMessage, res: ServerResponse, err?: Error) => {
+	if (err || res.statusCode >= StatusCodes.INTERNAL_SERVER_ERROR) return "error";
+	if (res.statusCode >= StatusCodes.BAD_REQUEST) return "warn";
+	if (isNoise(urlOf(req))) return "silent";
 	return "info";
 };
 
@@ -44,28 +34,15 @@ const addRequestId = (req: Request, res: Response, next: NextFunction) => {
 const httpLogger = pinoHttp({
 	logger,
 	genReqId: (req) => req.headers["x-request-id"] as string,
-	customLogLevel: (_req, res) => getLogLevel(res.statusCode),
-	customSuccessMessage: (req) => `${req.method} ${req.url} completed`,
-	customErrorMessage: (_req, res) => `Request failed with status code: ${res.statusCode}`,
-	// Only log response bodies in development
+	customLogLevel: getLogLevel,
+	customSuccessMessage: (req, res, responseTime) =>
+		`${req.method} ${urlOf(req)} ${res.statusCode} ${Math.round(responseTime)}ms`,
+	customErrorMessage: (req, res, err) => `${req.method} ${urlOf(req)} ${res.statusCode} ${err.message}`,
+	// Keep request logs small: pino-http's defaults include every request and response header
 	serializers: {
-		req: (req) => ({
-			method: req.method,
-			url: req.url,
-			id: req.id,
-		}),
+		req: (req) => ({ id: req.id, method: req.method, url: req.url }),
+		res: (res) => ({ statusCode: res.statusCode }),
 	},
 });
 
-const captureResponseBody = (_req: Request, res: Response, next: NextFunction) => {
-	if (!env.isProduction) {
-		const originalSend = res.send;
-		res.send = function (body) {
-			res.locals.responseBody = body;
-			return originalSend.call(this, body);
-		};
-	}
-	next();
-};
-
-export default [addRequestId, captureResponseBody, httpLogger];
+export default [addRequestId, httpLogger];

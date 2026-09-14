@@ -264,4 +264,4 @@ pnpm test     # needs pnpm db:up
 pnpm build
 ```
 
-Then open http://localhost:8080 and try the new endpoints in Swagger UI.
+Then open http://localhost:8080/docs and try the new endpoints in Swagger UI.

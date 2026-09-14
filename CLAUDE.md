@@ -38,7 +38,7 @@ Commit messages **always** start with a gitmoji and a capitalised label: `✨ Ad
 
 ## Architecture
 
-Express 5 + TypeScript REST API (ESM, `"type": "module"`) backed by PostgreSQL through Prisma. `src/server.ts` builds and exports the `app` (plus a shared pino `logger`) without listening. `src/index.ts` is the entrypoint that calls `listen` and handles graceful shutdown (closes the server, then `prisma.$disconnect()`). Tests import `app` from `@/server` and drive it with Supertest.
+Express 5 + TypeScript REST API (ESM, `"type": "module"`) backed by PostgreSQL through Prisma. `src/server.ts` builds and exports the `app` without listening. The shared pino `logger` lives in `@/common/utils/logger`. `src/index.ts` is the entrypoint that calls `listen` and handles graceful shutdown (closes the server, then `prisma.$disconnect()`). Tests import `app` from `@/server` and drive it with Supertest.
 
 Imports use the `@/*` alias, which maps to `src/*` (`tsconfig.json` paths, mirrored by `resolve.alias` in `vite.config.mts` for tests — keep the two in sync). Vitest globals (`describe`, `it`, `expect`, `vi`) are enabled, so tests don't import them.
 
@@ -62,13 +62,13 @@ Every JSON response uses `ServiceResponse` (`src/common/models/serviceResponse.t
 
 ### Middleware order (`src/server.ts`)
 
-json/urlencoded → CORS → helmet → rate limiter → request logger → feature routes → `openAPIRouter` (Swagger UI at `/`, raw spec at `/swagger.json`) → `errorHandler()` (404 fallback + error capture for pino-http).
+json/urlencoded → CORS → helmet → rate limiter → request logger → feature routes → `openAPIRouter` (Swagger UI at `/docs`, `/` redirects there, raw spec at `/swagger.json`) → `errorHandler()` (404 fallback + error capture for pino-http).
 
-Because Swagger UI is mounted at `/`, feature routes must be mounted before it.
+Swagger UI is mounted at `/docs`, not `/`: at the root it answered every unknown GET with a 200 and the 404 handler never ran. Keep feature routes mounted before the Swagger router.
 
 ### Config
 
-`src/common/utils/envConfig.ts` validates `process.env` with Zod **at import time** and throws on invalid values. Add new env vars to both the schema and `.env.template`. `DATABASE_URL` is required and has no default. `NODE_ENV` defaults to `production` if unset. The `env` object also exposes `isDevelopment`, `isProduction`, and `isTest`. Non-production environments get debug-level `pino-pretty` logs and response-body capture.
+`src/common/utils/envConfig.ts` validates `process.env` with Zod **at import time** and throws on invalid values. Add new env vars to both the schema and `.env.template`. `DATABASE_URL` is required and has no default. `NODE_ENV` defaults to `production` if unset. The `env` object also exposes `isDevelopment`, `isProduction`, and `isTest`. Non-production environments get debug-level, single-line `pino-pretty` logs; production gets info-level JSON. Request logs are one entry per request (method, URL, status, time, request ID), with successful health checks and Swagger assets skipped.
 
 The rate limiter's actual window is `15 * 60 * COMMON_RATE_LIMIT_WINDOW_MS`, so the default of `1000` works out to 15 minutes, not 1 second.
 

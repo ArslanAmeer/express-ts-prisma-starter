@@ -26,7 +26,7 @@ flowchart LR
 | `src/index.ts` | Entry point. Starts the HTTP server and handles graceful shutdown (closes the server, then disconnects Prisma) |
 | `src/server.ts` | Builds the Express `app` (middleware, routes, Swagger, error handlers). Exported without listening, so tests can drive it with Supertest |
 | `src/api/<feature>/` | One folder per feature. Everything for a resource lives together |
-| `src/api-docs/` | Combines every feature's OpenAPI registry into one document and serves Swagger UI at `/` and the raw spec at `/swagger.json` |
+| `src/api-docs/` | Combines every feature's OpenAPI registry into one document and serves Swagger UI at `/docs` (the root `/` redirects there) and the raw spec at `/swagger.json` |
 | `src/common/` | Code shared by features: Prisma client, middleware, the response envelope, config and validation helpers |
 | `src/generated/prisma/` | The typed Prisma client, generated from `prisma/schema/`. Never edit it by hand |
 | `prisma/` | Database schema, migrations and seed data. See [Database](database.md) |
@@ -70,9 +70,9 @@ Zod schemas do three jobs from one definition: the TypeScript types, runtime req
 
 ## Middleware order
 
-`express.json` → `urlencoded` → CORS → helmet → rate limiter → request logger → **feature routes** → Swagger (`/`, `/swagger.json`) → 404 handler → error logger.
+`express.json` → `urlencoded` → CORS → helmet → rate limiter → request logger → **feature routes** → Swagger (`/docs`, `/swagger.json`, `/` redirect) → 404 handler → error logger.
 
-Swagger UI is mounted at `/`, so feature routes must be mounted **before** it.
+Swagger UI is mounted at `/docs` and the root `/` redirects to it. Mount feature routes **before** the Swagger router so a feature path is never shadowed by it.
 
 ## Configuration
 
@@ -91,8 +91,8 @@ Read config through the exported `env` object (`env.PORT`, `env.isProduction`), 
 
 ## Logging
 
-- Use the pino `logger` exported from `@/server` in application code, not `console.log`.
-- Every request is logged by `pino-http` with a request ID. The ID comes from the `X-Request-Id` header, or is generated and returned in that header.
+- Use the pino `logger` from `@/common/utils/logger` in application code, not `console.log`.
+- Every request is logged by `pino-http` as one entry (method, URL, status, response time) with a request ID. Successful health checks and Swagger UI assets are skipped to keep logs readable; they are still logged when they fail. The ID comes from the `X-Request-Id` header, or is generated and returned in that header.
 - Log level depends on the response status: `5xx` → error, `4xx` → warn, otherwise info.
 - Outside production, logs are pretty-printed at debug level.
 

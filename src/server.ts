@@ -1,7 +1,6 @@
 import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
-import { pino } from "pino";
 import { healthCheckRouter } from "@/api/healthCheck/healthCheckRouter";
 import { userRouter } from "@/api/user/userRouter";
 import { openAPIRouter } from "@/api-docs/openAPIRouter";
@@ -9,8 +8,7 @@ import errorHandler from "@/common/middleware/errorHandler";
 import rateLimiter from "@/common/middleware/rateLimiter";
 import requestLogger from "@/common/middleware/requestLogger";
 import { DEFAULT_CORS_ORIGIN, env } from "@/common/utils/envConfig";
-
-const logger = pino({ name: "server start" });
+import { logger } from "@/common/utils/logger";
 
 // Deploying without setting CORS_ORIGIN silently blocks the real frontend, so say so loudly.
 // Logged through pino rather than console so production output stays parseable JSON.
@@ -45,4 +43,4 @@ app.use(openAPIRouter);
 // Error handlers
 app.use(errorHandler());
 
-export { app, logger };
+export { app };

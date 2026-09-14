@@ -86,7 +86,7 @@ Merges are **squash only** (merge commits are disabled, and protection requires 
 
 ## Logging and config
 
-- Log with the pino `logger` from `@/server`, not `console.log`. (Standalone scripts like `prisma/seed.ts` may use `console`.)
+- Log with the pino `logger` from `@/common/utils/logger`, not `console.log`. (Standalone scripts like `prisma/seed.ts` may use `console`.)
 - Never log secrets, passwords or full request bodies in production.
 - Read configuration from the validated `env` object (`@/common/utils/envConfig`), not `process.env`. New variables go into both the Zod schema and `.env.template`.
 
